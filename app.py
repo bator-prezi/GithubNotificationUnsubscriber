@@ -55,7 +55,6 @@ def unsubscribe_from_threads(github):
 
 	print("Getting notifications from " + previous_update.strftime("%Y-%m-%dT%H:%M:%SZ"))
 	user = github.get_user()
-	print(user.id)
 	notis = user.get_notifications(all=True, since=previous_update)
 	print("Number of new notifications: " + str(notis.totalCount))
 	for noti in notis:
