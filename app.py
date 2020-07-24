@@ -13,7 +13,7 @@ def read_last_update():
 	except:
 		print("No last update time")
 
-	return datetime.datetime(2020, 1, 1, 0, 0, 0, 0)
+	return datetime.datetime.now()
 
 def read_token():
 	try:
@@ -37,13 +37,13 @@ def update_timestamp(date):
 	date = datetime.datetime.now(date)
 	write_last_update(date)
 
-def should_unsubscribe(pr):
-	if pr.user.id == MY_USER_ID:
+def should_unsubscribe(pr, my_user_id):
+	if pr.user.id == my_user_id:
 		return False
 	requests = pr.get_review_requests()
 	for request in requests:
 		for user in request:
-			if user.id == MY_USER_ID:
+			if user.id == my_user_id:
 				return False
 	
 	return True
@@ -54,11 +54,13 @@ def unsubscribe_from_threads(github):
 	last_notification = previous_update
 
 	print("Getting notifications from " + previous_update.strftime("%Y-%m-%dT%H:%M:%SZ"))
-	notis = github.get_user().get_notifications(all=True, since=previous_update)
-	print("Number of notifications: " + str(notis.totalCount))
+	user = github.get_user()
+	print(user.id)
+	notis = user.get_notifications(all=True, since=previous_update)
+	print("Number of new notifications: " + str(notis.totalCount))
 	for noti in notis:
 		if noti.reason == "review_requested" and noti.subject.type == "PullRequest":
-			if should_unsubscribe(noti.get_pull_request()):
+			if should_unsubscribe(noti.get_pull_request(), user.id):
 				print("Unsubscribing from: " + noti.url)
 				noti._requester.requestJsonAndCheck("DELETE", noti.subscription_url,)
 				last_notification = max(last_notification, noti.updated_at)
